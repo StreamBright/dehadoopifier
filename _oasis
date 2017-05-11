@@ -1,0 +1,17 @@
+Name: Dehadoopifier
+Version: 0.1
+Synopsis: Nope
+Authors:
+  Attila Szabo <attila@streambrightdata.com>
+  Istvan Szukacs <istvan@streambrightdata.com>
+License: MIT
+Homepage: http://0.0.0.0
+OASISFormat: 0.4
+BuildTools: ocamlbuild
+Plugins: META (0.4), DevFiles (0.4)
+Executable "dehadoopifier"
+  Path: src
+  MainIs: dehadoopifier.ml
+  CompiledObject: best
+  BuildDepends:
+    str,unix
