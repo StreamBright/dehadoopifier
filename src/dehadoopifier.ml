@@ -10,7 +10,7 @@ let walk_directory_tree dir pattern =
       let contents = List.rev_map (Filename.concat dir) contents in
       let dirs, files =
         List.fold_left (fun (dirs,files) f ->
-          match (stat f).st_kind with
+          match (Unix.stat f).st_kind with
             | S_REG -> (dirs, f::files)  (* Regular file *)
             | S_DIR -> (f::dirs, files)  (* Directory *)
             | _ -> (dirs, files)
@@ -21,27 +21,24 @@ let walk_directory_tree dir pattern =
   in
   walk [] [dir]
 
-let get_first_line file_name =
- let ic = open_in file_name in
-  try
-    let line = input_line ic in
-      flush stdout;
-      close_in ic;
-      Some(line);
-  with e -> None
-
 let line_stream_of_channel channel =
   Stream.from
     (fun _ -> try Some (input_line channel) with End_of_file -> None)
 
-let get_package file_name =
-  let in_channel = open_in file_name in
+let process_line line =
+  line
+
+let process_lines lines =
+  Stream.iter process_line lines
+
+let process_file filename =
+  let in_channel = open_in filename in
   try
-    Stream.iter (fun line -> print_endline line) (line_stream_of_channel in_channel);
+    process_lines (line_stream_of_channel in_channel);
     close_in in_channel
-    with e ->
+  with e ->
     close_in in_channel;
-  raise e
+    raise e
 
 let stream_filter p stream =
     let rec next i =
@@ -51,7 +48,7 @@ let stream_filter p stream =
       with Stream.Failure -> None in
     Stream.from next
 
-
+let package p = None
 
 let get_package_value x =
   match x with
@@ -61,7 +58,7 @@ let get_package_value x =
 let main =
   let dir = Sys.argv.(1) in
   let results = walk_directory_tree dir ".*\\.java" in
-  List.iter (fun s -> (print_endline (get_package_value (get_package s)))) results
+  List.iter (fun s -> print_endline (get_package s)) results
 
 let () =
   main
