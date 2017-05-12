@@ -21,34 +21,23 @@ let walk_directory_tree dir pattern =
   in
   walk [] [dir]
 
-let line_stream_of_channel channel =
-  Stream.from
-    (fun _ -> try Some (input_line channel) with End_of_file -> None)
+let read_line i =
+	try
+		Some (input_line i)
+	with End_of_file ->
+		None
 
-let process_line line =
-  line
+let lines_from_files filename =
+  let rec lines_from_files_aux in_channel acc = match (read_line in_channel) with
+    | None -> List.rev acc
+    | Some s -> lines_from_files_aux in_channel (s :: acc) in
+  lines_from_files_aux (open_in filename) []
 
-let process_lines lines =
-  Stream.iter process_line lines
+let package_regexp =
+	Str.regexp ".*package.*"
 
-let process_file filename =
-  let in_channel = open_in filename in
-  try
-    process_lines (line_stream_of_channel in_channel);
-    close_in in_channel
-  with e ->
-    close_in in_channel;
-    raise e
-
-let stream_filter p stream =
-    let rec next i =
-      try
-        let value = Stream.next stream in
-        if p value then Some value else next i
-      with Stream.Failure -> None in
-    Stream.from next
-
-let package p = None
+let package_match str =
+	Str.string_match package_regexp str 0
 
 let get_package_value x =
   match x with
@@ -58,7 +47,9 @@ let get_package_value x =
 let main =
   let dir = Sys.argv.(1) in
   let results = walk_directory_tree dir ".*\\.java" in
-  List.iter (fun s -> print_endline (get_package s)) results
+  List.iter (
+    fun file_name -> print_endline (List.hd (List.filter (fun s -> package_match s) (lines_from_files file_name)))
+  ) results
 
 let () =
   main
