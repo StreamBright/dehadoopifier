@@ -1,4 +1,3 @@
-
 let walk_directory_tree dir pattern =
   let open Unix in
   let re = Str.regexp pattern in
@@ -27,29 +26,39 @@ let read_line i =
 	with End_of_file ->
 		None
 
-let lines_from_files filename =
-  let rec lines_from_files_aux in_channel acc = match (read_line in_channel) with
+let lines_from_file filename =
+  let rec lines_from_file_aux in_channel acc = match (read_line in_channel) with
     | None -> List.rev acc
-    | Some s -> lines_from_files_aux in_channel (s :: acc) in
-  lines_from_files_aux (open_in filename) []
+    | Some s -> lines_from_file_aux in_channel (s :: acc) in
+  lines_from_file_aux (open_in filename) []
 
 let package_regexp =
 	Str.regexp ".*package.*"
 
-let package_match str =
-	Str.string_match package_regexp str 0
+let import_regexp =
+	Str.regexp ".*import.*"
+
+let find_matches regxp str =
+	Str.string_match regxp str 0
 
 let get_package_value x =
   match x with
     | Some(v) -> v
     | None -> ""
 
+let get_packages files =
+	let ht = Hashtbl.create 10 in
+	List.map (
+    fun file_name -> (file_name, (List.hd (List.filter (fun s -> find_matches package_regexp s) (lines_from_file file_name))))
+  ) files
+
+let pp_str_tuple (x,y) =
+  Printf.printf "(%s,%s)\n" x y
+
 let main =
   let dir = Sys.argv.(1) in
   let results = walk_directory_tree dir ".*\\.java" in
-  List.iter (
-    fun file_name -> print_endline (List.hd (List.filter (fun s -> package_match s) (lines_from_files file_name)))
-  ) results
+  List.iter pp_str_tuple (get_packages results)
 
 let () =
   main
