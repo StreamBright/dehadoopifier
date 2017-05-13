@@ -99,7 +99,7 @@ let get_triplets files =
   ) files
 
 let process_imports imports =
-  let clean = List.map (fun s -> replace "import\ " "" s) imports in
+  let clean = List.map process_import imports in
   String.concat " ; "  clean
 
 let pp_triplets (package, file_name, imports) =
