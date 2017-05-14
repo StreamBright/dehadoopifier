@@ -117,18 +117,18 @@ let paths =
   ht
 
 let ht_lookup ht key =
-	try Some (Hashtbl.find ht key)
+  try Some (Hashtbl.find ht key)
   with Not_found -> None
 
 let search_package_path full_path =
-	let rec sp path_rev =
-	let lookup = ht_lookup paths (String.concat "_" (List.rev path_rev)) in
-	match path_rev, lookup
-		with
-			| head::tail, None -> sp tail
-			| _, Some found -> Some found
-			| head, None -> None in
-	sp (List.rev full_path)
+  let rec sp path_rev =
+  let lookup = ht_lookup paths (String.concat "_" (List.rev path_rev)) in
+  match path_rev, lookup
+    with
+      | head::tail, None -> sp tail
+      | _, Some found -> Some found
+      | head, None -> None in
+  sp (List.rev full_path)
 
 let package_from_import import =
   let full_path_as_list = List.rev (List.tl (List.tl (List.rev (Str.split (Str.regexp "\\.") import)))) in
@@ -163,9 +163,9 @@ results:
 let main =
   let dir = Sys.argv.(1) in
   let results = walk_directory_tree dir ".*\\.java" in
-	print_endline "Results :: ";
-	List.iter print_endline results;
-	print_endline "Triplets  :: ";
+  print_endline "Results :: ";
+  List.iter print_endline results;
+  print_endline "Triplets  :: ";
   List.iter pp_triplets (get_triplets results)
 
 let () =
